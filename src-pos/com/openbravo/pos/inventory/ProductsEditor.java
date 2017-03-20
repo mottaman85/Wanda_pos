@@ -733,8 +733,11 @@ public final class ProductsEditor extends JPanel implements EditorRecord {
             if (dPriceSell == null) {
                 m_jPriceSellTax.setText(null);
             } else {
-                double dTaxRate = taxeslogic.getTaxRate((TaxCategoryInfo) taxcatmodel.getSelectedItem());
+                //double dTaxRate = taxeslogic.getTaxRate((TaxCategoryInfo) taxcatmodel.getSelectedItem());
+                double dTaxRate = Double.parseDouble(m_jfieldMajorPercent.getText()) / 100;
+                double dTaxtRateMin = Double.parseDouble(m_jfieldMinoPercent.getText()) / 100;
                 m_jPriceSellTax.setText(Formats.CURRENCY.formatValue(new Double(dPriceSell.doubleValue() * (1.0 + dTaxRate))));
+                m_jPriceSell.setText(Formats.CURRENCY.formatValue(new Double(dPriceSell.doubleValue() * (1.0 + dTaxtRateMin))));
             }
             reportlock = false;
         }

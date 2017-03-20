@@ -25,6 +25,7 @@ import com.openbravo.data.loader.DataWrite;
 import com.openbravo.data.loader.SerializableRead;
 import com.openbravo.data.loader.SerializableWrite;
 import com.openbravo.format.Formats;
+import com.openbravo.pos.config.CatalogClass;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.util.StringUtils;
 import java.io.*;
@@ -45,6 +46,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
     private Properties attributes;
     private String productid;
     private String attsetinstid;
+    private double buyPrice;
 
     /** Creates new TicketLineInfo
      * @param productid
@@ -106,6 +108,16 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         init(null, null, 0.0, 0.0, null, new Properties());
     }
 
+    private double getValueCalculateMajor(double buyPrice, boolean major){
+        double total = buyPrice;
+        if(major){
+            total = total + (buyPrice * (CatalogClass.MAYOREO/100));
+        }else{
+            total = total + (buyPrice * (CatalogClass.MENUDEO/100));
+        }
+        return total;
+    }
+    
     /**
      *
      * @param product
@@ -114,10 +126,22 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
      * @param tax
      * @param attributes
      */
-    public TicketLineInfo(ProductInfoExt product, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
+    public TicketLineInfo(
+            ProductInfoExt product, double dMultiply, 
+            double dPrice, TaxInfo tax, 
+            Properties attributes,  boolean checkMajor) {
 
-        String pid;
-
+       String pid;
+       
+       double addValue = 0;
+       
+       if(checkMajor){
+         
+       }else{
+       
+       }
+       
+       dPrice =  getValueCalculateMajor(product.getPriceBuy(), checkMajor);
         if (product == null) {
             pid = null;
         } else {
@@ -171,7 +195,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
      * @param attributes
      */
     public TicketLineInfo(ProductInfoExt oProduct, double dPrice, TaxInfo tax, Properties attributes) {
-        this(oProduct, 1.0, dPrice, tax, attributes);
+        this(oProduct, 1.0, dPrice, tax, attributes, false);
     }
 
     /**
@@ -206,6 +230,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
         m_sTicket = null;
         m_iLine = -1;
+        this.buyPrice = buyPrice;
     }
 
     void setTicket(String ticket, int line) {
@@ -648,6 +673,14 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 //
 
 }
+
+    public double getBuyPrice() {
+        return buyPrice;
+    }
+
+    public void setBuyPrice(double buyPrice) {
+        this.buyPrice = buyPrice;
+    }
 
 
 }

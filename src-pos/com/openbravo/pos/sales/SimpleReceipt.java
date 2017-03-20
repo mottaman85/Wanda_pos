@@ -122,9 +122,9 @@ public class SimpleReceipt extends javax.swing.JPanel {
             m_jTaxesEuros.setText(null);
             m_jTotalEuros.setText(null);
         } else {
-            m_jSubtotalEuros.setText(ticket.printSubTotal());
+            m_jSubtotalEuros.setText(ticket.printSubTotal(true, 0));
             m_jTaxesEuros.setText(ticket.printTax());
-            m_jTotalEuros.setText(ticket.printTotal(true));
+            m_jTotalEuros.setText(ticket.printTotal(true, true, 0));
         }
     }
     

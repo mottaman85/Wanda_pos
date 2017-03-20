@@ -23,6 +23,7 @@ import com.openbravo.data.loader.DataRead;
 import com.openbravo.data.loader.LocalRes;
 import com.openbravo.data.loader.SerializableRead;
 import com.openbravo.format.Formats;
+import com.openbravo.pos.config.CatalogClass;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
@@ -496,9 +497,18 @@ public class TicketInfo implements SerializableRead, Externalizable {
      *
      * @return
      */
-    public double getSubTotal() {
+    public double getSubTotal(boolean min, double percent) {
         double sum = 0.0;
+     
         for (TicketLineInfo line : m_aLines) {
+            System.out.println("\n BuyPrice : " + line.getBuyPrice()+ 
+                        "\n PriceTax : " + line.getPriceTax() + 
+                        "\n SubValue : " + line.getSubValue()
+            );
+            double lineValue = line.getBuyPrice();
+            if(percent > 0){
+                lineValue = lineValue + (lineValue * (percent/100));
+            }
             sum += line.getSubValue();
         }
         return sum;
@@ -527,15 +537,18 @@ public class TicketInfo implements SerializableRead, Externalizable {
      *
      * @return
      */
-    public double getTotal(boolean taxes) {
-        if(taxes){
-            return getSubTotal() + getTax();
+    public double getTotal(boolean taxes, boolean min, double percent) {
+        if(taxes){ // MAYOREO
+            return getSubTotal(min, CatalogClass.MAYOREO);// + getTax();  
+        }else{ // MENUDEO
+            return getSubTotal(min, CatalogClass.MENUDEO);// + getTax();
+         
         } 
-        return getSubTotal();
+        //return 55;//getSubTotal(min, percent);
     }
     
-    public double getTotalMajor() {
-        return getSubTotal();
+    public double getTotalMajor(boolean min, double percent) {
+        return getSubTotal(min, percent);
     }
     
     /**
@@ -768,8 +781,12 @@ public class TicketInfo implements SerializableRead, Externalizable {
      *
      * @return
      */
+    public String printSubTotal(boolean min, double percent) {
+        return Formats.CURRENCY.formatValue(getSubTotal(min, percent));
+    }
+    
     public String printSubTotal() {
-        return Formats.CURRENCY.formatValue(getSubTotal());
+        return Formats.CURRENCY.formatValue(getSubTotal(true, 0));
     }
 
     /**
@@ -784,8 +801,12 @@ public class TicketInfo implements SerializableRead, Externalizable {
      *
      * @return
      */
-    public String printTotal(boolean taxes) {
-        return Formats.CURRENCY.formatValue(getTotal(taxes));
+    public String printTotal(boolean taxes, boolean min, double percent) {
+        return Formats.CURRENCY.formatValue(getTotal(taxes, min, percent));
+    }
+    
+     public String printTotal() {
+        return Formats.CURRENCY.formatValue(getTotal(true, true, 0));
     }
 
     /**
@@ -808,8 +829,8 @@ public class TicketInfo implements SerializableRead, Externalizable {
      *
      * @return
      */
-    public String VoucherReturned(boolean taxes){
-        return Formats.CURRENCY.formatValue(getTotalPaid()- getTotal(taxes));
+    public String VoucherReturned(boolean taxes, boolean min, double percent){
+        return Formats.CURRENCY.formatValue(getTotalPaid()- getTotal(taxes, min, percent));
     }
 //Added JDl 03.07.13
 

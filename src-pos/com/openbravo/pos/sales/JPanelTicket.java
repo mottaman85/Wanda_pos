@@ -179,7 +179,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     private RestaurantDBUtils restDB;
     private KitchenDisplay kitchenDisplay;
     private String ticketPrintType;
-    private Boolean checkMajor = false;
+    private Boolean checkMajor = true;
 
 // added 25.05.13 JDl warranty receipt
     private Boolean warrantyPrint=false;
@@ -565,21 +565,23 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
      
     private void printPartialTotals(){
-               
+        System.out.println( 
+                String.format("Partial Totals = check [%b]  ", checkMajor)
+                );
         if (m_oTicket.getLinesCount() == 0) {
             m_jSubtotalEuros.setText(null);
             m_jTaxesEuros.setText(null);
             m_jTotalEuros.setText(null);
             repaint();
         } else {
-            m_jSubtotalEuros.setText(m_oTicket.printSubTotal());
+            m_jSubtotalEuros.setText(m_oTicket.printSubTotal(true, 0));
             m_jTaxesEuros.setText(m_oTicket.printTax());
-            m_jTotalEuros.setText(m_oTicket.printTotal(true));
+            m_jTotalEuros.setText(m_oTicket.printTotal(checkMajor, true, 0));
         }
     }
     
     private void paintTicketLine(int index, TicketLineInfo oLine){
-        
+        System.out.println("TicketLine Info");
         if (executeEventAndRefresh("ticket.setline", new ScriptArg("index", index), new ScriptArg("line", oLine)) == null) {
 
             m_oTicket.setLine(index, oLine);
@@ -601,16 +603,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 // modified 02.05.13 read tax selected from the panel
 // modified 22.06.13 to allow mulitplier to be used with variable price           
 //        oProduct.setTaxCategoryID(((TaxCategoryInfo) taxcategoriesmodel.getSelectedItem()).getID()); 
-        
+        System.out.println("addTicketLine");
         if (oProduct.isVprice()){
             TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getCustomer());
             if (m_jaddtax.isSelected()) {
                 dPrice /= (1 + tax.getRate());
             }
-                addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax, (java.util.Properties) (oProduct.getProperties().clone())));
+                addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax, (java.util.Properties) (oProduct.getProperties().clone()), checkMajor));
         } else {        
                 TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getCustomer());
-                addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax, (java.util.Properties) (oProduct.getProperties().clone())));                
+                addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax, (java.util.Properties) (oProduct.getProperties().clone()), checkMajor));                
             }
         }
     
@@ -1318,11 +1320,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             try {
                 // reset the payment info
                 taxeslogic.calculateTaxes(ticket);
-                System.out.println("Total: " + ticket.getTotal(checkMajor));
+                System.out.println("Total: " + ticket.getTotal(checkMajor, jCheckBox1.isSelected(),0));
                 
                 
                 
-                if (ticket.getTotal(checkMajor)>=0.0){
+                if (ticket.getTotal(checkMajor, jCheckBox1.isSelected(), 0)>=0.0){
                     ticket.resetPayments(); //Only reset if is sale
                 }
                 
@@ -1342,7 +1344,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                     paymentdialog.setTransactionID(ticket.getTransactionID());
 
-                    if (paymentdialog.showDialog(ticket.getTotal(checkMajor), ticket.getCustomer())) {
+                    if (paymentdialog.showDialog(ticket.getTotal(checkMajor, jCheckBox1.isSelected(), 0), ticket.getCustomer())) {
 
                         // assign the payments selected and calculate taxes.         
                         ticket.setPayments(paymentdialog.getSelectedPayments());
@@ -1831,9 +1833,11 @@ if (pickupSize!=null && (Integer.parseInt(pickupSize) >= tmpPickupId.length())){
         jPanel4 = new javax.swing.JPanel();
         m_jTicketId = new javax.swing.JLabel();
         m_jPanTotals = new javax.swing.JPanel();
+        m_jLblTotalEuros5 = new javax.swing.JLabel();
         m_jLblTotalEuros3 = new javax.swing.JLabel();
         m_jLblTotalEuros2 = new javax.swing.JLabel();
         m_jLblTotalEuros1 = new javax.swing.JLabel();
+        jComboBox2 = new javax.swing.JComboBox<>();
         m_jSubtotalEuros = new javax.swing.JLabel();
         m_jTaxesEuros = new javax.swing.JLabel();
         m_jTotalEuros = new javax.swing.JLabel();
@@ -2128,6 +2132,12 @@ if (pickupSize!=null && (Integer.parseInt(pickupSize) >= tmpPickupId.length())){
         m_jPanTotals.setPreferredSize(new java.awt.Dimension(375, 60));
         m_jPanTotals.setLayout(new java.awt.GridLayout(2, 3, 4, 0));
 
+        m_jLblTotalEuros5.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
+        m_jLblTotalEuros5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        m_jLblTotalEuros5.setLabelFor(m_jTotalEuros);
+        m_jLblTotalEuros5.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
+        m_jPanTotals.add(m_jLblTotalEuros5);
+
         m_jLblTotalEuros3.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         m_jLblTotalEuros3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         m_jLblTotalEuros3.setLabelFor(m_jSubtotalEuros);
@@ -2145,6 +2155,14 @@ if (pickupSize!=null && (Integer.parseInt(pickupSize) >= tmpPickupId.length())){
         m_jLblTotalEuros1.setLabelFor(m_jTotalEuros);
         m_jLblTotalEuros1.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
         m_jPanTotals.add(m_jLblTotalEuros1);
+
+        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Mayoreo", "Menudeo" }));
+        jComboBox2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox2ActionPerformed(evt);
+            }
+        });
+        m_jPanTotals.add(jComboBox2);
 
         m_jSubtotalEuros.setBackground(m_jEditLine.getBackground());
         m_jSubtotalEuros.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
@@ -2536,9 +2554,20 @@ m_App.getAppUserView().showTask("com.openbravo.pos.customers.CustomersPanel");
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         
-        checkMajor = !checkMajor;
-        System.out.println("check..." + checkMajor );
+        //checkMajor = !checkMajor;
+        jComboBox2.getSelectedIndex();
+        System.out.println("check..." + checkMajor + " : " + jComboBox2.getSelectedIndex());
     }//GEN-LAST:event_jCheckBox1ActionPerformed
+
+    private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
+        // TODO add your handling code here:
+        if(jComboBox2.getSelectedIndex() == 0 ){
+          checkMajor = true;
+        }else{
+          checkMajor = false;
+        }
+        refreshTicket();
+    }//GEN-LAST:event_jComboBox2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2547,6 +2576,7 @@ m_App.getAppUserView().showTask("com.openbravo.pos.customers.CustomersPanel");
     private javax.swing.JPanel catcontainer;
     private javax.swing.JButton jButton1;
     private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JComboBox<String> jComboBox2;
     private javax.swing.JButton jEditAttributes;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -2566,6 +2596,7 @@ m_App.getAppUserView().showTask("com.openbravo.pos.customers.CustomersPanel");
     private javax.swing.JLabel m_jLblTotalEuros1;
     private javax.swing.JLabel m_jLblTotalEuros2;
     private javax.swing.JLabel m_jLblTotalEuros3;
+    private javax.swing.JLabel m_jLblTotalEuros5;
     private javax.swing.JButton m_jList;
     private com.openbravo.beans.JNumberKeys m_jNumberKeys;
     private javax.swing.JPanel m_jOptions;

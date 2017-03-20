@@ -118,12 +118,16 @@ public class JTicketCatalogLines extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jLabel1 = new javax.swing.JLabel();
+
         setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         setLayout(new java.awt.CardLayout());
+        add(jLabel1, "card2");
     }// </editor-fold>//GEN-END:initComponents
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
     
 }
